@@ -131,7 +131,7 @@ def cddlGetPdf(driver):
         # Go to the next page
         if not error:
 
-            # Show how many URLS where skipped
+            # Show how many URLS were skipped
             for htmlUrl in htmlUrls:
                 cntHtml = cntHtml + 1
                 x = htmlUrl.split('/');
