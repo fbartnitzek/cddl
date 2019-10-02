@@ -16,13 +16,13 @@
 
 Heruntergeladen werden alle PDFs im Posteingang mit Ausnahme der Links, die "Termingebundenes" enthalten, weil hier die Comdirect trotz .pdf-Endung manchmal einen HTML-Link versteckt und das Script dann durcheinanderkäme.
  
-Wer sein gesamtes Archiv heruterladen möchte, kann auch im Script oben
+Wer sein gesamtes Archiv herunterladen möchte, kann auch im Script oben
 
     gotoArchive = True
 
 setzen.
 
-Nach Beendigung wird das die Python-Shell nicht geschlossen. Man kann beliebig in der Postbox suchen und dann die letzte Script-Zeile
+Nach Beendigung wird die Python-Shell nicht geschlossen. Man kann beliebig in der Postbox suchen und dann die letzte Script-Zeile
  
     cddlGetPdf(drv)
  
