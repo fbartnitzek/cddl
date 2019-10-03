@@ -112,14 +112,14 @@ def cddlGetPdf(driver):
                 # Get short URL -> use part after last '/', use part before '?'
                 pdfUrlShort = (pdfUrl.split('/')[-1]).split('?')[0]
 
-                # Sometimes, Termingebundenes is .pdf despite being HTML -> skip
+                # Sometimes, Termingebundenes is .pdf despite being HTML -> check
                 x = pdfUrl.split('Termingebundenes');
-                if len(x) == 1:
+                if len(x) == 1:                         # Normal PDF download
                     cntPdf = cntPdf + 1
                     driver.get(pdfUrl)
                     sleep(0.1)
                     print('Get  {:4d}: {:s}'.format(cntPdf, pdfUrlShort))
-                else:
+                else:                                   # Skip possibly HTML
                     cntHtml = cntHtml + 1
                     print('Skip {:4d}: {:s}'.format(cntHtml, pdfUrlShort))
             except:
