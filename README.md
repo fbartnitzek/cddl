@@ -1,5 +1,5 @@
 ## Comdirect Postbox Downloader in Python
-* Getestet unter MX-Linux 18.3 (Debian9-Derivat), python 3.5
+* Getestet unter MX-Linux 19 (Debian10-Derivat), python 3.7.3
 ### Notwendige Pakete
 * python3-selenium
 * chromedriver

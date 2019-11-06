@@ -25,7 +25,7 @@ def cddlLogin():
         "plugins.always_open_pdf_externally": True
         }
     )
-    driver        = webdriver.Chrome('/usr/bin/chromedriver', chrome_options = chromeOptions)
+    driver        = webdriver.Chrome('/usr/bin/chromedriver', options = chromeOptions)
     comdirectUrl  = 'https://kunde.comdirect.de/lp/wt/login?execution=e1s1&afterTimeout=true'
     postBoxUrl    = 'https://kunde.comdirect.de/itx/posteingangsuche'
     driver.get(comdirectUrl);
