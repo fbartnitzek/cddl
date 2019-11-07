@@ -34,7 +34,23 @@ def cddlLogin():
     zugangsNummerField  = driver.find_element_by_name('param1')
     pinField            = driver.find_element_by_name('param3')
     loginButton         = driver.find_element_by_id('loginAction')
-
+    
+    # Click away the cookie button, maximum wait for 2 seconds
+    tMaxCookie = 2
+    t = 0
+    while t <= tMaxCookie:
+        try:
+            cookieButton = driver.find_element_by_id('closeCookieBanner')
+            cookieButton.click()
+            break
+        except:
+            print('Wait for cookie banner {:.1f} sec'.format(t))
+            t = t + 0.1
+            sleep(0.1)
+    if t > tMaxCookie:
+        print('No cookie banner found, continue anyway')
+        print('')
+        
     # Login
     zugangsNummerField.send_keys(zugangsNummer)
     pinField.send_keys(getpass('PIN: '))
