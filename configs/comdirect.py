@@ -5,6 +5,7 @@ from selenium import webdriver
 # urls
 login_url = 'https://kunde.comdirect.de/lp/wt/login?execution=e1s1&afterTimeout=true'
 post_box_url = 'https://kunde.comdirect.de/itx/posteingangsuche'
+logout_url = 'https://kunde.comdirect.de/lp/wt/logout'
 
 
 def find_login_element(driver: webdriver):

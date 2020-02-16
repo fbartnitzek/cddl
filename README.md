@@ -20,6 +20,7 @@
     downloads = '/home/user/Downloads'
     file_head = '/home/user/comdirect_head.txt'
     archive = False
+    close = False
 
     ```
 
@@ -34,6 +35,9 @@
 - opens browser, inserts login and password
 - 2 Factor authentication is needed for comdirect - use photoTAN in browser
 - different usage modes
+- closes browser if bank-config states `close = True`
+
+## usage modes
 
 ### default
 - all PDFs in inbox will be downloaded, except links containing "Termingebundenes" which sometimes cause bugs due to html-links
@@ -57,6 +61,3 @@
 
 ### interactive
 - not needed for delta mode
-
-## TODO
-- clean logout and exit of browser 

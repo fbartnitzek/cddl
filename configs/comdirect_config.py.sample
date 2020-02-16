@@ -4,3 +4,4 @@ password = '123456'
 downloads = '/home/user/Downloads'
 file_head = '/home/user/comdirect_head.txt'
 archive = False
+close = False

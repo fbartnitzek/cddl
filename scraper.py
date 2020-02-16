@@ -203,9 +203,17 @@ def scrap_pdfs(bank, driver: webdriver):
             print('should never happen')
 
 
+def logout_and_close(bank, driver: webdriver):
+    if bank.config.close:
+        driver.get(bank.logout_url)
+        sleep(1)
+        drv.close()
+
+
 # ------------------------------------------------------------------------------
 # Login and download
 drv = login_with_browser(comdirect)
 scrap_pdfs(comdirect, drv)
+logout_and_close(comdirect, drv)
 
 # ------------------------------------------------------------------------------
