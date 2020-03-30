@@ -6,6 +6,7 @@ from selenium.webdriver.chrome.options import Options
 
 # bank specific files
 import configs.comdirect as comdirect
+# import configs.frankfurtersparkasse as sparkasse
 
 
 # ------------------------------------------------------------------------------
@@ -25,27 +26,18 @@ def login_with_browser(bank) -> webdriver:
     driver.get(bank.login_url)
 
     # Get needed elements
+    sleep(1)
     login_field = bank.find_login_element(driver)
     pin_field = bank.find_password_element(driver)
     login_button = bank.find_login_button_element(driver)
 
-    # Click away the cookie button, maximum wait for 2 seconds
-    t_max_cookie = 2
-    t = 0
-    while t <= t_max_cookie:
-        try:
-            cookie_button = bank.find_cookie_close_element(driver)
-            cookie_button.click()
-            break
-        except:
-            print('Wait for cookie banner {:.1f} sec'.format(t))
-            t = t + 0.1
-            sleep(0.1)
-    if t > t_max_cookie:
-        print('No cookie banner found, continue anyway')
-        print('')
+    # Click away the cook'header > div.loginlogout'ie button, maximum wait for 2 seconds
+    bank.accept_cookie(driver)
 
     # Login
+    # sparkasse: element not interactable
+    #   not helpful: driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
+
     login_field.send_keys(bank.config.login)
     sleep(0.3)
     pin_field.send_keys(bank.config.password)
@@ -74,106 +66,6 @@ def login_with_browser(bank) -> webdriver:
     return driver
 
 
-def read_pages(bank, driver: webdriver, last_known_pdf: str) -> str:
-    # returns latest pdf name
-
-    # Reset counters
-    new_head_pdf = ''
-    cnt_pdf = 0
-    cnt_html = 0
-    page = 0
-
-    while True:
-        page = page + 1
-        print('----------------------------------------------')
-        print('Downloading page {:d}'.format(page))
-        print()
-
-        # Scroll down to show the page number
-        driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
-        sleep(1)
-
-        # Get links and extract direct PDF-URLs from the links
-        pdf_links = bank.find_pdf_links(driver)
-        pdf_urls = []
-        for pdfLink in pdf_links:
-            pdf_urls.append(pdfLink.get_attribute("href"))
-
-        # Get the HTML links
-        html_links = bank.find_pseudo_pdf_links(driver)
-        html_urls = []
-        for htmlLink in html_links:
-            html_urls.append(htmlLink.get_attribute("href"))
-
-        # Download all the PDFs to the default directory
-        error = False
-
-        for pdf_url in pdf_urls:
-
-            try:
-                # Get short URL -> use part after last '/', use part before '?'
-                pdf_name = bank.extract_pdf_from_link(pdf_url)
-
-                # Sometimes, Termingebundenes is .pdf despite being HTML -> check
-                if bank.is_pseudo_pdf(pdf_name):
-                    cnt_html = cnt_html + 1
-                    print('Skip {:4d}: {:s}'.format(cnt_html, pdf_name))
-
-                else:  # Skip possibly HTML
-                    cnt_pdf = cnt_pdf + 1
-
-                    # check if pdf is last-known-pdf, then done
-                    if pdf_name == last_known_pdf:
-                        print('------------------------------------')
-                        print("found last known pdf: '{:s}'".format(last_known_pdf))
-                        print('exiting...')
-
-                        return new_head_pdf
-
-                    # use it as new head pdf, if its first one
-                    if cnt_pdf == 1:
-                        new_head_pdf = pdf_name
-                        print("updated new head to url: '{:s}'".format(pdf_name))
-
-                    driver.get(pdf_url)
-                    sleep(0.1)
-                    print('Get  {:4d}: {:s}'.format(cnt_pdf, pdf_name))
-
-            except:
-                driver.back()
-                print('Error, failed to load {:s}'.format(pdf_url))
-                error = True
-                break
-
-        # Go to the next page
-        if not error:
-
-            # Show how many URLS were skipped
-            for htmlUrl in html_urls:
-                cnt_html = cnt_html + 1
-                x = htmlUrl.split('/')
-                html_url_short = x[-1]
-                print('Skip {:4d}: {:s}'.format(cnt_html, html_url_short))
-            print()
-
-            # Check if there is another right button - stop if not
-            try:
-                right_button = bank.find_next_page_button()
-            except:
-                print('----------------------------------------------')
-                print('Downloaded -> {:5d} documents'.format(cnt_pdf))
-                print('Skipped    -> {:5d} documents'.format(cnt_html))
-                print('No more right button -> End of download')
-                print('----------------------------------------------')
-                break
-            driver.execute_script("arguments[0].click();", right_button)
-
-        # Stop on error
-        else:
-            break
-    return new_head_pdf
-
-
 def scrap_pdfs(bank, driver: webdriver):
 
     # read last pdf-url from file
@@ -186,7 +78,8 @@ def scrap_pdfs(bank, driver: webdriver):
     print("last known pdf: '{:s}'".format(last_known_pdf))
 
     # collect all files until last head file
-    new_head_pdf = read_pages(bank, driver, last_known_pdf)
+    # new_head_pdf = read_pages(bank, driver, last_known_pdf)
+    new_head_pdf = bank.read_pages(driver, last_known_pdf)
 
     # replace old head with new head?
     if new_head_pdf != '' and new_head_pdf != last_known_pdf:
@@ -205,15 +98,20 @@ def scrap_pdfs(bank, driver: webdriver):
 
 def logout_and_close(bank, driver: webdriver):
     if bank.config.close:
-        driver.get(bank.logout_url)
+        bank.logout(driver)
         sleep(1)
         drv.close()
 
 
 # ------------------------------------------------------------------------------
-# Login and download
+# Login and download comdirect
 drv = login_with_browser(comdirect)
 scrap_pdfs(comdirect, drv)
 logout_and_close(comdirect, drv)
+
+# Login and download sparkasse
+# drv = login_with_browser(sparkasse)
+# scrap_pdfs(sparkasse, drv)
+# logout_and_close(sparkasse, drv)
 
 # ------------------------------------------------------------------------------
