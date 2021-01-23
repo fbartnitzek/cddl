@@ -27,7 +27,8 @@ def accept_cookie(driver: webdriver):
     while t <= t_max_cookie:
         try:
             # cookie_button = driver.find_element_by_id('closeCookieBanner')
-            cookie_button = driver.find_element_by_id('uc-btn-accept-banner')
+            # cookie_button = driver.find_element_by_id('uc-btn-accept-banner')
+            cookie_button = driver.find_element_by_id('privacy-init-wall-button-accept')
             cookie_button.click()
             break
         except:
