@@ -149,7 +149,7 @@ def extract_pdf_from_link(pdf_url: str):
 
 
 def find_next_page_button(driver: webdriver):
-    return driver.find_element_by_css_selector("a[id='f1-j_idt124_right']")
+    return driver.find_element_by_css_selector("a[id='f1-j_idt125_right']")
 
 
 def navigate_to_archive(driver: webdriver):
