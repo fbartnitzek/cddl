@@ -45,6 +45,17 @@ def login_with_browser(bank) -> webdriver:
     login_button.click()
     sleep(1)
 
+    # Wait until photoTAN is used and accepted
+    cnt = 0
+    while True:
+        try:
+            bank.find_2fa_ready_element1(driver)
+            break
+        except:
+            cnt = cnt + 1
+            print('Wait for postbox {:3d} sec'.format(cnt))
+            sleep(1)
+
     # Goto postbox
     driver.get(bank.post_box_url)
 
@@ -52,7 +63,7 @@ def login_with_browser(bank) -> webdriver:
     cnt = 0
     while True:
         try:
-            bank.find_2fa_ready_element(driver)
+            bank.find_2fa_ready_element2(driver)
             break
         except:
             cnt = cnt + 1

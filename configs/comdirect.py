@@ -40,7 +40,11 @@ def accept_cookie(driver: webdriver):
         print('')
 
 
-def find_2fa_ready_element(driver: webdriver):
+def find_2fa_ready_element1(driver: webdriver):
+    return driver.find_element_by_link_text("Alle Umsätze")
+
+
+def find_2fa_ready_element2(driver: webdriver):
     return driver.find_element_by_link_text('Archiv')
 
 
