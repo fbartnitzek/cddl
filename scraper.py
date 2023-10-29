@@ -6,8 +6,6 @@ from selenium.webdriver.chrome.options import Options
 
 # bank specific files
 import configs.comdirect as comdirect
-# import configs.frankfurtersparkasse as sparkasse
-
 
 # ------------------------------------------------------------------------------
 # Login and goto postbox
@@ -33,10 +31,6 @@ def login_with_browser(bank) -> webdriver:
 
     # Click away the cook'header > div.loginlogout'ie button, maximum wait for 2 seconds
     bank.accept_cookie(driver)
-
-    # Login
-    # sparkasse: element not interactable
-    #   not helpful: driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
 
     login_field.send_keys(bank.config.login)
     sleep(0.3)
@@ -82,18 +76,19 @@ def scrap_pdfs(bank, driver: webdriver):
     # read last pdf-url from file
     current_head_file = bank.config.file_head
     try:
+        # read id (first line) of doc
         with open(current_head_file, 'r') as f:
-            last_known_pdf = f.read().replace('\n', '').replace('\r', '')
-    except FileNotFoundError:
-        last_known_pdf = ''
-    print("last known pdf: '{:s}'".format(last_known_pdf))
+            last_known_id = f.readline().replace('\n', '').replace('\r', '')
 
-    # collect all files until last head file
-    # new_head_pdf = read_pages(bank, driver, last_known_pdf)
-    new_head_pdf = bank.read_pages(driver, last_known_pdf)
+    except FileNotFoundError:
+        last_known_id = ''
+    print("last known pdf: '{:s}'".format(last_known_id))
+
+    # collect all files until last head file [id, name]
+    new_head_doc = bank.read_pages(driver, last_known_id)
 
     # replace old head with new head?
-    if new_head_pdf != '' and new_head_pdf != last_known_pdf:
+    if new_head_doc is not None:
 
         # old to backup - should replace on unix
         os.rename(current_head_file, current_head_file + '.bak')
@@ -101,8 +96,8 @@ def scrap_pdfs(bank, driver: webdriver):
         # write new_head_pdf_url to file
         try:
             with open(current_head_file, 'w+') as f:
-                f.write(new_head_pdf)
-                print("updated new head file to url: '{:s}'".format(new_head_pdf))
+                f.write('\n'.join(new_head_doc))
+            print("updated new head file to: {:s} - {:s}".format(new_head_doc[0], new_head_doc[1]))
         except FileNotFoundError:
             print('should never happen')
 
@@ -119,10 +114,3 @@ def logout_and_close(bank, driver: webdriver):
 drv = login_with_browser(comdirect)
 scrap_pdfs(comdirect, drv)
 logout_and_close(comdirect, drv)
-
-# Login and download sparkasse
-# drv = login_with_browser(sparkasse)
-# scrap_pdfs(sparkasse, drv)
-# logout_and_close(sparkasse, drv)
-
-# ------------------------------------------------------------------------------
