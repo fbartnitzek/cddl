@@ -2,10 +2,13 @@
 import configs.comdirect_config as config
 from selenium import webdriver
 from time import sleep
+import re
+import doctest
 
 # urls
 login_url = 'https://kunde.comdirect.de/lp/wt/login?execution=e1s1&afterTimeout=true'
 post_box_url = 'https://kunde.comdirect.de/itx/posteingangsuche'
+post_box_url = 'https://kunde.comdirect.de/itx/posteingangsuche?execution=e3s3'
 logout_url = 'https://kunde.comdirect.de/lp/wt/logout'
 
 
@@ -28,7 +31,8 @@ def accept_cookie(driver: webdriver):
         try:
             # cookie_button = driver.find_element_by_id('closeCookieBanner')
             # cookie_button = driver.find_element_by_id('uc-btn-accept-banner')
-            cookie_button = driver.find_element_by_id('privacy-init-wall-button-accept')
+            cookie_button = driver.find_element_by_id(
+                'privacy-init-wall-button-accept')
             cookie_button.click()
             break
         except:
@@ -48,13 +52,13 @@ def find_2fa_ready_element2(driver: webdriver):
     return driver.find_element_by_link_text('Archiv')
 
 
-def read_pages(driver: webdriver, last_known_pdf: str) -> str:
+def read_pages(driver: webdriver, last_known_id: str) -> str:
     # returns latest pdf name
 
     # Reset counters
-    new_head_pdf = ''
-    cnt_pdf = 0
-    cnt_html = 0
+    new_head_doc = None
+    cnt_entry = 0
+    cnt_fail = 0
     page = 0
 
     while True:
@@ -67,89 +71,74 @@ def read_pages(driver: webdriver, last_known_pdf: str) -> str:
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
         sleep(1)
 
-        # Get links and extract direct PDF-URLs from the links
-        pdf_links = driver.find_elements_by_css_selector("a[id*='urlAbfrage'][href*='.pdf']")
-        pdf_urls = []
-        for pdfLink in pdf_links:
-            pdf_urls.append(pdfLink.get_attribute("href"))
+        # Get all doc-urls: href=/itx/nachrichten/dokumentenabruf/id/B708AB6FA385B5C3A87ACA8DDDC7C6F0
+        entry_links = driver.find_elements_by_css_selector(
+            "a[id*='urlAbfrage'][href^='/itx/nachrichten/dokumentenabruf/id/']")
+        entry_urls = []
+        for entry_link in entry_links:
+            entry_urls.append(
+                [entry_link.get_attribute("href"),
+                 entry_link.get_attribute("text")])
 
-        # Get the HTML links
-        html_links = driver.find_elements_by_css_selector("a[id*='urlAbfrage'][href*='.html']")
-        html_urls = []
-        for htmlLink in html_links:
-            html_urls.append(htmlLink.get_attribute("href"))
-
-        # Download all the PDFs to the default directory
-        error = False
-
-        for pdf_url in pdf_urls:
-
+        for entry in entry_urls:
             try:
-                # Get short URL -> use part after last '/', use part before '?'
-                pdf_name = extract_pdf_from_link(pdf_url)
+                cnt_entry = cnt_entry + 1
+                url = entry[0]
+                text = entry[1]
+                id = extract_id_from_url(url)
 
-                # Sometimes, Termingebundenes is .pdf despite being HTML -> check
-                if 'Termingebundenes' in pdf_name:
-                    cnt_html = cnt_html + 1
-                    print('Skip {:4d}: {:s}'.format(cnt_html, pdf_name))
+                if id == last_known_id:
+                    print('------------------------------------')
+                    print("found last known id: '{:s}'".format(last_known_id))
+                    print('exiting...')
+                    return new_head_doc
+                
+                print("download {:s} {:s} - {:s}".format(id, text, url))
+                driver.get(url)
+                sleep(0.1)
 
-                else:  # Skip possibly HTML
-                    cnt_pdf = cnt_pdf + 1
-
-                    # check if pdf is last-known-pdf, then done
-                    if pdf_name == last_known_pdf:
-                        print('------------------------------------')
-                        print("found last known pdf: '{:s}'".format(last_known_pdf))
-                        print('exiting...')
-
-                        return new_head_pdf
-
-                    # use it as new head pdf, if its first one
-                    if cnt_pdf == 1:
-                        new_head_pdf = pdf_name
-                        print("updated new head to url: '{:s}'".format(pdf_name))
-
-                    driver.get(pdf_url)
-                    sleep(0.1)
-                    print('Get  {:4d}: {:s}'.format(cnt_pdf, pdf_name))
+                if cnt_entry == 1:
+                    new_head_doc = [id, text]
+                    print("updated new head to id: '{:s}'".format(id))
 
             except:
+                print('Error, failed to load {:s}'.format(id))
                 driver.back()
-                print('Error, failed to load {:s}'.format(pdf_url))
-                error = True
-                break
+                cnt_fail = cnt_fail + 1
 
         # Go to the next page
-        if not error:
-
-            # Show how many URLS were skipped
-            for htmlUrl in html_urls:
-                cnt_html = cnt_html + 1
-                x = htmlUrl.split('/')
-                html_url_short = x[-1]
-                print('Skip {:4d}: {:s}'.format(cnt_html, html_url_short))
-            print()
-
+        try:
             # Check if there is another right button - stop if not
-            try:
-                right_button = find_next_page_button(driver)
-            except:
-                print('----------------------------------------------')
-                print('Downloaded -> {:5d} documents'.format(cnt_pdf))
-                print('Skipped    -> {:5d} documents'.format(cnt_html))
-                print('No more right button -> End of download')
-                print('----------------------------------------------')
-                break
-            driver.execute_script("arguments[0].click();", right_button)
-
-        # Stop on error
-        else:
+            right_button = find_next_page_button(driver)
+        except:
+            print('----------------------------------------------')
+            print('Downloaded -> {:5d} documents'.format(cnt_entry))
+            print('failed     -> {:5d} documents'.format(cnt_fail))
+            print('No more right button -> End of download')
+            print('----------------------------------------------')
             break
-    return new_head_pdf
+        driver.execute_script("arguments[0].click();", right_button)
+    return new_head_doc
 
 
 def extract_pdf_from_link(pdf_url: str):
     return (pdf_url.split('/')[-1]).split('?')[0]
+
+def extract_id_from_url(url: str):
+    """Return the doc-id of an url.
+
+    >>> extract_id_from_url('https://kunde.comdirect.de/itx/nachrichten/dokumentenabruf/id/032567D703D3794FE916E466077AB304/predocument?selectEntryId=0')
+    '032567D703D3794FE916E466077AB304'
+    >>> extract_id_from_url('https://kunde.comdirect.de/itx/nachrichten/dokumentenabruf/id/7B5D56394C2F65FFED9D1F67A1F67F7C?selectEntryId=1')
+    '7B5D56394C2F65FFED9D1F67A1F67F7C'
+    >>> extract_id_from_url('/itx/nachrichten/dokumentenabruf/id/B708AB6FA385B5C3A87ACA8DDDC7C6F0')
+    'B708AB6FA385B5C3A87ACA8DDDC7C6F0'
+    """
+    result = re.search(r"/id/([0-9A-Z]+)([/?].+)?$", url)
+    if result:
+        return result.group(1)
+    else:
+        return ""
 
 
 def find_next_page_button(driver: webdriver):
@@ -171,3 +160,7 @@ def navigate_to_archive(driver: webdriver):
 
 def logout(driver: webdriver):
     driver.get(logout_url)
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()

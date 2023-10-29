@@ -55,9 +55,15 @@
     ```
     file_head = '/home/user/comdirect_head.txt'
     ```
-- that file will contain the latest pdf-file-name of the last run and will be used as reference
+- that file will contain the latest doc-id as headline and it's name as second line and will be used as reference
     - all files will be downloaded until that file is reached
     - afterwards the file will be updated and the previous file is stored as backup (and will be overridden on next succesful run) 
 
 ### interactive
 - not needed for delta mode
+
+### tests
+
+```sh
+python3 -m doctest -v configs/comdirect.py
+```
