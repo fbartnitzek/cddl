@@ -92,8 +92,6 @@ def scrap_pdfs(bank, driver: webdriver):
 
         # old to backup - should replace on unix
         os.rename(current_head_file, current_head_file + '.bak')
-        print("new head doc: ")
-        print(new_head_doc)
 
         # write new_head_pdf_url to file
         try:
