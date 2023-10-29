@@ -52,15 +52,9 @@ def find_2fa_ready_element2(driver: webdriver):
     return driver.find_element_by_link_text('Archiv')
 
 
-def read_pages(driver: webdriver, last_known_id: str) -> str:
-    # returns latest pdf name
-
-    # Reset counters
-    new_head_doc = None
-    cnt_entry = 0
-    cnt_fail = 0
+def find_new_docs(driver: webdriver, last_known_id: str) -> list:
     page = 0
-
+    new_docs = []
     while True:
         page = page + 1
         print('----------------------------------------------')
@@ -74,37 +68,17 @@ def read_pages(driver: webdriver, last_known_id: str) -> str:
         # Get all doc-urls: href=/itx/nachrichten/dokumentenabruf/id/B708AB6FA385B5C3A87ACA8DDDC7C6F0
         entry_links = driver.find_elements_by_css_selector(
             "a[id*='urlAbfrage'][href^='/itx/nachrichten/dokumentenabruf/id/']")
-        entry_urls = []
+        
         for entry_link in entry_links:
-            entry_urls.append(
-                [entry_link.get_attribute("href"),
-                 entry_link.get_attribute("text")])
+            url = entry_link.get_attribute("href")
+            id = extract_id_from_url(url)
+            if id == last_known_id:
+                return new_docs
 
-        for entry in entry_urls:
-            try:
-                cnt_entry = cnt_entry + 1
-                url = entry[0]
-                text = entry[1]
-                id = extract_id_from_url(url)
-
-                if id == last_known_id:
-                    print('------------------------------------')
-                    print("found last known id: '{:s}'".format(last_known_id))
-                    print('exiting...')
-                    return new_head_doc
-                
-                print("download {:s} {:s} - {:s}".format(id, text, url))
-                driver.get(url)
-                sleep(0.1)
-
-                if cnt_entry == 1:
-                    new_head_doc = [id, text]
-                    print("updated new head to id: '{:s}'".format(id))
-
-            except:
-                print('Error, failed to load {:s}'.format(id))
-                driver.back()
-                cnt_fail = cnt_fail + 1
+            new_docs.append(
+                [url,
+                 entry_link.get_attribute("text"),
+                 extract_id_from_url(url)])
 
         # Go to the next page
         try:
@@ -112,17 +86,56 @@ def read_pages(driver: webdriver, last_known_id: str) -> str:
             right_button = find_next_page_button(driver)
         except:
             print('----------------------------------------------')
-            print('Downloaded -> {:5d} documents'.format(cnt_entry))
-            print('failed     -> {:5d} documents'.format(cnt_fail))
+            print('New Docs -> {:5d} documents'.format(len(new_docs)))
             print('No more right button -> End of download')
             print('----------------------------------------------')
             break
         driver.execute_script("arguments[0].click();", right_button)
-    return new_head_doc
+    return new_docs
 
+
+def read_pages(driver: webdriver, last_known_id: str) -> list:
+    # returns latest doc entry
+
+    new_head_doc = None
+    failed = 0
+    downloaded = 0
+
+    new_docs = find_new_docs(driver, last_known_id)
+
+    if len(new_docs) > 0:
+        for i in range(len(new_docs)):
+            doc = new_docs[i]
+            url = doc[0]
+            text = doc[1]
+            id = doc[2]
+            print("download {:s} {:s} - {:s}".format(id, text, url))
+            try: 
+                driver.get(url)
+                sleep(0.1)
+                downloaded = downloaded + 1
+            except:
+                print('Error, failed to load {:s} {:s} - {:s}'.format(id, text, url))
+                driver.back()
+                failed = failed + 1
+
+            if i == 0:
+                new_head_doc = [id, text]
+                print("updated new head to id: '{:s}'".format(id))
+        
+        print('----------------------------------------------')
+        print('found:       {:5d} documents'.format(len(new_docs)))
+        print('downloaded:  {:5d} documents'.format(downloaded))
+        print('failed:      {:5d} documents'.format(failed))
+        print('----------------------------------------------')
+        return new_head_doc
+    
+    print('No new docs found')
+    return None
 
 def extract_pdf_from_link(pdf_url: str):
     return (pdf_url.split('/')[-1]).split('?')[0]
+
 
 def extract_id_from_url(url: str):
     """Return the doc-id of an url.
@@ -160,6 +173,7 @@ def navigate_to_archive(driver: webdriver):
 
 def logout(driver: webdriver):
     driver.get(logout_url)
+
 
 if __name__ == "__main__":
     import doctest
