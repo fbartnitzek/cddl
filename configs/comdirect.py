@@ -8,7 +8,6 @@ import doctest
 # urls
 login_url = 'https://kunde.comdirect.de/lp/wt/login?execution=e1s1&afterTimeout=true'
 post_box_url = 'https://kunde.comdirect.de/itx/posteingangsuche'
-post_box_url = 'https://kunde.comdirect.de/itx/posteingangsuche?execution=e3s3'
 logout_url = 'https://kunde.comdirect.de/lp/wt/logout'
 
 
