@@ -6,8 +6,6 @@ from selenium.webdriver.chrome.options import Options
 
 # bank specific files
 import configs.comdirect as comdirect
-# import configs.frankfurtersparkasse as sparkasse
-
 
 # ------------------------------------------------------------------------------
 # Login and goto postbox
@@ -33,10 +31,6 @@ def login_with_browser(bank) -> webdriver:
 
     # Click away the cook'header > div.loginlogout'ie button, maximum wait for 2 seconds
     bank.accept_cookie(driver)
-
-    # Login
-    # sparkasse: element not interactable
-    #   not helpful: driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
 
     login_field.send_keys(bank.config.login)
     sleep(0.3)
@@ -119,10 +113,3 @@ def logout_and_close(bank, driver: webdriver):
 drv = login_with_browser(comdirect)
 scrap_pdfs(comdirect, drv)
 logout_and_close(comdirect, drv)
-
-# Login and download sparkasse
-# drv = login_with_browser(sparkasse)
-# scrap_pdfs(sparkasse, drv)
-# logout_and_close(sparkasse, drv)
-
-# ------------------------------------------------------------------------------
