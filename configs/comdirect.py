@@ -67,17 +67,15 @@ def find_new_docs(driver: webdriver, last_known_id: str) -> list:
         # Get all doc-urls: href=/itx/nachrichten/dokumentenabruf/id/B708AB6FA385B5C3A87ACA8DDDC7C6F0
         entry_links = driver.find_elements_by_css_selector(
             "a[id*='urlAbfrage'][href^='/itx/nachrichten/dokumentenabruf/id/']")
-        
+
         for entry_link in entry_links:
             url = entry_link.get_attribute("href")
             id = extract_id_from_url(url)
             if id == last_known_id:
+                print('found last known doc: {:s}'.format(id))
                 return new_docs
-
-            new_docs.append(
-                [url,
-                 entry_link.get_attribute("text"),
-                 extract_id_from_url(url)])
+            
+            new_docs.append([url, entry_link.get_attribute("text"), id])
 
         # Go to the next page
         try:
@@ -109,28 +107,30 @@ def read_pages(driver: webdriver, last_known_id: str) -> list:
             text = doc[1]
             id = doc[2]
             print("download {:s} {:s} - {:s}".format(id, text, url))
-            try: 
+            try:
                 driver.get(url)
                 sleep(0.1)
                 downloaded = downloaded + 1
             except:
-                print('Error, failed to load {:s} {:s} - {:s}'.format(id, text, url))
+                print(
+                    'Error, failed to load {:s} {:s} - {:s}'.format(id, text, url))
                 driver.back()
                 failed = failed + 1
 
             if i == 0:
                 new_head_doc = [id, text]
                 print("updated new head to id: '{:s}'".format(id))
-        
+
         print('----------------------------------------------')
         print('found:       {:5d} documents'.format(len(new_docs)))
         print('downloaded:  {:5d} documents'.format(downloaded))
         print('failed:      {:5d} documents'.format(failed))
         print('----------------------------------------------')
         return new_head_doc
-    
+
     print('No new docs found')
     return None
+
 
 def extract_pdf_from_link(pdf_url: str):
     return (pdf_url.split('/')[-1]).split('?')[0]
