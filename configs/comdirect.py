@@ -1,6 +1,7 @@
 # noinspection PyUnresolvedReferences
 import configs.comdirect_config as config
 from selenium import webdriver
+from selenium.webdriver.common.by import By
 from time import sleep
 import re
 import doctest
@@ -16,8 +17,7 @@ def find_login_element(driver: webdriver):
 
 
 def find_password_element(driver: webdriver):
-    return driver.find_element_by_name('param3')
-
+    return driver.find_element(By.XPATH, "//input[@name='param3']")
 
 def find_login_button_element(driver: webdriver):
     return driver.find_element_by_id('loginAction')
