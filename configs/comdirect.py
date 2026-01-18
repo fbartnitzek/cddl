@@ -24,20 +24,20 @@ def find_login_button_element(driver: webdriver):
 
 
 def accept_cookie(driver: webdriver):
-    t_max_cookie = 2
+    t_max_cookie = 10
     t = 0
     while t <= t_max_cookie:
         try:
             # cookie_button = driver.find_element_by_id('closeCookieBanner')
             # cookie_button = driver.find_element_by_id('uc-btn-accept-banner')
-            cookie_button = driver.find_element_by_id(
-                'privacy-init-wall-button-accept')
+            print('Press the accept button')
+            cookie_button = driver.find_element_by_id('cmpAcceptAll')
             cookie_button.click()
             break
         except:
             print('Wait for cookie banner {:.1f} sec'.format(t))
-            t = t + 0.1
-            sleep(0.1)
+            t = t + 0.5
+            sleep(0.5)
     if t > t_max_cookie:
         print('No cookie banner found, continue anyway')
         print('')
