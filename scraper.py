@@ -32,6 +32,15 @@ def login_with_browser(bank) -> webdriver:
     # Click away the cook'header > div.loginlogout'ie button, maximum wait for 2 seconds
     bank.accept_cookie(driver)
 
+    # check the elements exist
+    if login_field == None:
+        print("login_field not found")
+    if pin_field == None:
+        print("pin_field not found")
+    if login_button == None:
+        print("login_button not found")
+    
+
     login_field.send_keys(bank.config.login)
     sleep(0.3)
     pin_field.send_keys(bank.config.password)

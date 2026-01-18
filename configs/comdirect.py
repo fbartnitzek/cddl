@@ -13,11 +13,13 @@ logout_url = 'https://kunde.comdirect.de/lp/wt/logout'
 
 
 def find_login_element(driver: webdriver):
-    return driver.find_element_by_name('param1')
+    # return driver.find_element_by_name('param1')
+    return driver.find_element_by_id('param1Input')
 
 
 def find_password_element(driver: webdriver):
-    return driver.find_element(By.XPATH, "//input[@name='param3']")
+    # return driver.find_element(By.XPATH, "//input[@name='param3']")
+    return driver.find_element_by_id('param3Input')
 
 def find_login_button_element(driver: webdriver):
     return driver.find_element_by_id('loginAction')
@@ -68,6 +70,7 @@ def find_new_docs(driver: webdriver, last_known_id: str) -> list:
         entry_links = driver.find_elements_by_css_selector(
             "a[id*='urlAbfrage'][href^='/itx/nachrichten/dokumentenabruf/id/']")
 
+        print("found entry_links: {:d}".format(len(entry_links)))
         for entry_link in entry_links:
             url = entry_link.get_attribute("href")
             id = extract_id_from_url(url)
